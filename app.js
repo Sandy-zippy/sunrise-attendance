@@ -7,6 +7,7 @@
   'use strict';
 
   const WEBHOOK_URL = 'https://sandyautomations.app.n8n.cloud/webhook/sunrise-attendance/ingest';
+  const VERIFY_URL  = 'https://sandyautomations.app.n8n.cloud/webhook/sunrise-attendance/verify';
   const STORAGE_KEY = 'sd_session_v1';
 
   // ----- state -----
@@ -14,11 +15,14 @@
   const state = {
     phone: '',          // '+919999900001'
     code: '',           // '412563'
+    driverName: '',     // 'Test Driver 001' (returned from verify)
+    assignedVehicle: '',// 'TS09 AA 0001' (returned from verify)
     checkinType: 'check_in',
     selfie: null,       // data URL string
     vehicle: null,      // data URL string
     gps: null,          // { lat, lng, accuracy }
     submitting: false,
+    verifying: false,
   };
 
   // ----- helpers: DOM -----
@@ -151,15 +155,78 @@
     refreshLoginState();
   });
 
-  formLogin.addEventListener('submit', (e) => {
+  const continueLabel = continueBtn.querySelector('.btn__label');
+
+  function setContinueLoading(loading) {
+    state.verifying = loading;
+    if (loading) {
+      continueBtn.classList.add('is-loading');
+      continueBtn.disabled = true;
+      continueLabel.textContent = 'Verifying...';
+    } else {
+      continueBtn.classList.remove('is-loading');
+      continueLabel.textContent = 'Continue';
+      refreshLoginState(); // re-evaluate enable state based on inputs
+    }
+  }
+
+  formLogin.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (state.verifying) return;
     const p = validatePhone(phoneInput.value);
     const c = validateCode(codeInput.value);
     if (!(p.ok && c.ok)) { refreshLoginState(); return; }
-    state.phone = e164India(p.value);
-    state.code  = c.value;
-    saveSession();
-    enterCaptureScreen();
+
+    const phoneE164 = e164India(p.value);
+    const codeVal   = c.value;
+
+    // Clear any prior errors before attempting verify.
+    phoneErr.textContent = '';
+    codeErr.textContent  = '';
+
+    setContinueLoading(true);
+
+    try {
+      const res = await fetch(VERIFY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phoneE164, code: codeVal }),
+      });
+
+      let body = null;
+      try { body = await res.json(); } catch (err) { body = null; }
+
+      if (res.status === 200 && body && body.success === true) {
+        state.phone           = phoneE164;
+        state.code            = codeVal;
+        state.driverName      = body.driver_name || '';
+        state.assignedVehicle = body.vehicle || '';
+        saveSession();
+        setContinueLoading(false);
+        enterCaptureScreen();
+        return;
+      }
+
+      if (res.status === 401 && body && body.error === 'wrong_code') {
+        codeErr.textContent = 'Wrong code. Check the code your fleet manager gave you.';
+        setContinueLoading(false);
+        return;
+      }
+
+      if (res.status === 401 && body && body.error === 'unknown_phone') {
+        phoneErr.textContent = "We can't find this phone. Check it with your fleet manager.";
+        setContinueLoading(false);
+        return;
+      }
+
+      // 400 missing_fields, 500 server_error, or any unexpected shape: generic.
+      phoneErr.textContent = "Couldn't reach server. Check WiFi or mobile data.";
+      setContinueLoading(false);
+    } catch (err) {
+      console.error('Verify failed:', err);
+      phoneErr.textContent = "Couldn't reach server. Check WiFi or mobile data.";
+      setContinueLoading(false);
+    }
   });
 
   // ===========================================================
@@ -195,7 +262,12 @@
   const resizer      = $('#resizer');
 
   function enterCaptureScreen() {
-    whoPhone.textContent = formatIndianPhoneDisplay(state.phone.replace(/^\+91/, ''));
+    const phoneDisplay = formatIndianPhoneDisplay(state.phone.replace(/^\+91/, ''));
+    if (state.driverName) {
+      whoPhone.textContent = state.driverName + ' (' + phoneDisplay + ')';
+    } else {
+      whoPhone.textContent = phoneDisplay;
+    }
     setSegment(state.checkinType);
     refreshSubmitState();
     showScreen('capture');
@@ -225,10 +297,14 @@
   function resetAll() {
     state.phone = '';
     state.code  = '';
+    state.driverName = '';
+    state.assignedVehicle = '';
     state.checkinType = 'check_in';
     resetCaptures();
     phoneInput.value = '';
     codeInput.value  = '';
+    phoneErr.textContent = '';
+    codeErr.textContent  = '';
     refreshLoginState();
   }
 
@@ -510,9 +586,10 @@
       resultTime.textContent = istClock();
     }
 
-    resultName.textContent    = body.driver_name || 'Driver';
-    if (body.vehicle) {
-      resultVehicle.textContent = body.vehicle;
+    resultName.textContent    = body.driver_name || state.driverName || 'Driver';
+    const vehicleVal = body.vehicle || state.assignedVehicle;
+    if (vehicleVal) {
+      resultVehicle.textContent = vehicleVal;
       resultVehicle.style.opacity = '';
     } else {
       resultVehicle.textContent = 'Not assigned';

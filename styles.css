@@ -243,6 +243,8 @@ button { font-family: inherit; }
 }
 .btn--submit.is-loading .btn__spin { display: inline-block; }
 .btn--submit.is-loading .btn__label { opacity: 0.65; }
+.btn.is-loading { opacity: 0.85; cursor: progress; pointer-events: none; }
+.btn.is-loading .btn__label { opacity: 0.75; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ---------- capture screen header bar ---------- */
