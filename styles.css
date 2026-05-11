@@ -612,6 +612,7 @@ button { font-family: inherit; }
   padding: 48px 8px 24px;
   text-align: center;
 }
+.result[hidden] { display: none; }
 .result__icon {
   width: 88px; height: 88px;
   border-radius: 50%;
