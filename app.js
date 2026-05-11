@@ -503,9 +503,7 @@
     resultTitle.textContent = checkinType === 'check_out' ? 'Checked out' : 'Checked in';
 
     if (body.timestamp) {
-      const ts = new Date(body.timestamp);
-      const friendly = ts.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }) + ' IST';
-      resultTime.textContent = friendly;
+      resultTime.textContent = istClock(new Date(body.timestamp));
     } else {
       resultTime.textContent = istClock();
     }
