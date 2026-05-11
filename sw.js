@@ -4,7 +4,7 @@
    network-only for everything else (incl. the webhook).
    ========================================================= */
 
-const CACHE_NAME = 'sunrise-ci-v1';
+const CACHE_NAME = 'sunrise-ci-v2';
 const APP_SHELL = [
   './',
   'index.html',
