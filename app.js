@@ -465,13 +465,16 @@
 
   function humanizeError(code) {
     const map = {
-      wrong_code:          'Wrong phone or code. Check both and try again.',
-      unknown_phone:       'Wrong phone or code. Check both and try again.',
-      photo_upload_failed: 'Photo upload failed. Retake both photos and submit again.',
-      gps_invalid:         'Location signal was too weak. Step outside and retry.',
-      already_checked_in:  'You are already checked in for today.',
-      not_checked_in:      'No active check in found for this driver.',
-      unknown:             'Something went wrong. Try again.',
+      wrong_code:            'Wrong phone or code. Check both and try again.',
+      unknown_phone:         'Wrong phone or code. Check both and try again.',
+      photo_upload_failed:   'Photo upload failed. Retake both photos and submit again.',
+      selfie_upload_failed:  'Selfie upload failed. Take a clearer photo and submit again.',
+      vehicle_upload_failed: 'Vehicle photo upload failed. Retake and submit again.',
+      missing_fields:        'Some info is missing. Refresh the page and try again.',
+      google_auth_failed:    'Server is having trouble saving. Try again in a minute.',
+      ghl_lookup_failed:     "Couldn't find your account. Tell your fleet manager.",
+      sheets_append_failed:  'Saved your check-in but the log had a hiccup. Tell your fleet manager.',
+      unknown:               'Something went wrong. Try again.',
     };
     return map[code] || 'Something went wrong. Try again.';
   }
@@ -500,13 +503,21 @@
     resultTitle.textContent = checkinType === 'check_out' ? 'Checked out' : 'Checked in';
 
     if (body.timestamp) {
-      resultTime.textContent = body.timestamp;
+      const ts = new Date(body.timestamp);
+      const friendly = ts.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }) + ' IST';
+      resultTime.textContent = friendly;
     } else {
       resultTime.textContent = istClock();
     }
 
     resultName.textContent    = body.driver_name || 'Driver';
-    resultVehicle.textContent = body.vehicle     || 'Vehicle';
+    if (body.vehicle) {
+      resultVehicle.textContent = body.vehicle;
+      resultVehicle.style.opacity = '';
+    } else {
+      resultVehicle.textContent = 'Not assigned';
+      resultVehicle.style.opacity = '0.5';
+    }
 
     if (body.gps_link) {
       resultMap.href = body.gps_link;
