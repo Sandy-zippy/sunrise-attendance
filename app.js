@@ -57,11 +57,15 @@
     return '+91' + d;
   }
 
+  // IST is UTC+5:30, no DST. Shift by 330 minutes then read UTC fields to get
+  // IST values — works regardless of device timezone.
+  function istShifted(now = new Date()) {
+    return new Date(now.getTime() + 330 * 60000);
+  }
+
   function istIso(now = new Date()) {
     // Build ISO 8601 like 2026-05-11T15:30:00+05:30 (IST, +330 min offset).
-    const offsetMin = 330;
-    const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
-    const ist = new Date(utcMs + offsetMin * 60000);
+    const ist = istShifted(now);
     const pad = (n, w = 2) => String(n).padStart(w, '0');
     const yyyy = ist.getUTCFullYear();
     const mm   = pad(ist.getUTCMonth() + 1);
@@ -74,9 +78,7 @@
 
   function istClock(now = new Date()) {
     // "15:32 IST"
-    const offsetMin = 330;
-    const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
-    const ist = new Date(utcMs + offsetMin * 60000);
+    const ist = istShifted(now);
     const pad = (n) => String(n).padStart(2, '0');
     return `${pad(ist.getUTCHours())}:${pad(ist.getUTCMinutes())} IST`;
   }
