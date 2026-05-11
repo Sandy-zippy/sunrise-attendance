@@ -600,11 +600,27 @@
   // ----- service worker -----
 
   window.addEventListener('load', () => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch((err) => {
-        console.warn('SW registration failed:', err);
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      // If a waiting worker is already there, tell it to take over now.
+      if (reg.waiting) reg.waiting.postMessage({ action: 'skipWaiting' });
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            // New version installed while an old one is controlling. Activate + reload.
+            nw.postMessage({ action: 'skipWaiting' });
+          }
+        });
       });
-    }
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloaded) return;
+        reloaded = true;
+        window.location.reload();
+      });
+    }).catch((err) => console.warn('SW registration failed:', err));
   });
 
 })();
