@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#D5EB4B" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Sunrise CI" />
+  <meta name="description" content="Sunrise Drivers attendance check-in." />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="icon" href="icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Sunrise Driver Check-In</title>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <main id="main" class="app">
+
+    <!-- ========= SCREEN 1: LOGIN ========= -->
+    <section id="screen-login" class="screen screen--active" aria-labelledby="login-heading">
+      <header class="brand">
+        <div class="brand__mark" aria-hidden="true">
+          <span class="brand__dot"></span>
+          <span class="brand__wordmark">ZippyScale</span>
+        </div>
+        <h1 id="login-heading" class="brand__title">Sunrise Drivers</h1>
+        <p class="brand__tagline">Attendance check in</p>
+      </header>
+
+      <form id="form-login" class="card form" novalidate>
+        <div class="field">
+          <label for="phone" class="field__label">Phone number</label>
+          <div class="field__row field__row--phone">
+            <span class="field__prefix" aria-hidden="true">+91</span>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              inputmode="numeric"
+              autocomplete="tel-national"
+              maxlength="10"
+              placeholder="99999 00001"
+              aria-describedby="phone-error"
+              required
+            />
+          </div>
+          <p id="phone-error" class="field__error" role="alert" aria-live="polite"></p>
+        </div>
+
+        <div class="field">
+          <label for="code" class="field__label">Driver code</label>
+          <div class="field__row">
+            <input
+              id="code"
+              name="code"
+              type="password"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="6"
+              placeholder="6 digit code"
+              aria-describedby="code-error"
+              required
+            />
+          </div>
+          <p id="code-error" class="field__error" role="alert" aria-live="polite"></p>
+        </div>
+
+        <button id="btn-continue" type="submit" class="btn btn--primary" disabled>
+          <span class="btn__label">Continue</span>
+        </button>
+
+        <p class="help">
+          Use the phone number and code from your fleet manager.
+          <a href="mailto:ops@sunrisedrivers.in?subject=Driver%20code%20help" class="help__link">Forgot? Tap here.</a>
+        </p>
+      </form>
+    </section>
+
+    <!-- ========= SCREEN 2: CAPTURE ========= -->
+    <section id="screen-capture" class="screen" aria-labelledby="capture-heading" hidden>
+      <header class="bar">
+        <div class="bar__who">
+          <span class="bar__label">Signed in as</span>
+          <span id="who-phone" class="bar__phone">+91 00000 00000</span>
+        </div>
+        <button id="btn-logout" type="button" class="bar__logout">Logout</button>
+      </header>
+
+      <h2 id="capture-heading" class="h2">Today's check</h2>
+
+      <div class="seg" role="tablist" aria-label="Check in or check out">
+        <button id="seg-in" type="button" class="seg__btn seg__btn--active" role="tab" aria-selected="true" data-type="check_in">Check in</button>
+        <button id="seg-out" type="button" class="seg__btn" role="tab" aria-selected="false" data-type="check_out">Check out</button>
+        <span class="seg__pill" aria-hidden="true"></span>
+      </div>
+
+      <ol class="stack" aria-label="Capture steps">
+
+        <li class="cap" data-step="selfie">
+          <div class="cap__head">
+            <span class="cap__index">1</span>
+            <div class="cap__title">
+              <h3 class="cap__name">Your selfie</h3>
+              <p class="cap__hint">Face the camera, good lighting.</p>
+            </div>
+            <span class="cap__check" aria-hidden="true"></span>
+          </div>
+          <button type="button" class="cap__shot" data-target="selfie" aria-label="Take selfie">
+            <img id="thumb-selfie" class="cap__thumb" alt="" hidden />
+            <span class="cap__placeholder" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <span class="cap__cta">Tap to take selfie</span>
+            </span>
+          </button>
+          <button type="button" class="cap__retake" data-target="selfie" hidden>Retake</button>
+          <input id="input-selfie" type="file" accept="image/*" capture="user" hidden />
+        </li>
+
+        <li class="cap" data-step="vehicle">
+          <div class="cap__head">
+            <span class="cap__index">2</span>
+            <div class="cap__title">
+              <h3 class="cap__name">Photo with vehicle</h3>
+              <p class="cap__hint">Stand next to the car. Plate must be readable.</p>
+            </div>
+            <span class="cap__check" aria-hidden="true"></span>
+          </div>
+          <button type="button" class="cap__shot" data-target="vehicle" aria-label="Take vehicle photo">
+            <img id="thumb-vehicle" class="cap__thumb" alt="" hidden />
+            <span class="cap__placeholder" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14l-1.5-5a2 2 0 0 0-1.9-1.4H8.4A2 2 0 0 0 6.5 12L5 17z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/><path d="M3 17h2"/><path d="M19 17h2"/></svg>
+              <span class="cap__cta">Tap to take vehicle photo</span>
+            </span>
+          </button>
+          <button type="button" class="cap__retake" data-target="vehicle" hidden>Retake</button>
+          <input id="input-vehicle" type="file" accept="image/*" capture="environment" hidden />
+        </li>
+
+        <li class="cap cap--gps" data-step="gps">
+          <div class="cap__head">
+            <span class="cap__index">3</span>
+            <div class="cap__title">
+              <h3 class="cap__name">GPS location</h3>
+              <p class="cap__hint">We log this once, when you submit.</p>
+            </div>
+            <span class="cap__check" aria-hidden="true"></span>
+          </div>
+
+          <button id="btn-gps" type="button" class="gps__btn">
+            <span class="gps__btn-label">Get my location</span>
+          </button>
+
+          <div id="gps-result" class="gps__result" hidden>
+            <dl class="gps__grid">
+              <div><dt>Latitude</dt><dd id="gps-lat" class="mono">0.000000</dd></div>
+              <div><dt>Longitude</dt><dd id="gps-lng" class="mono">0.000000</dd></div>
+              <div><dt>Accuracy</dt><dd id="gps-acc" class="mono">0 m</dd></div>
+            </dl>
+            <a id="gps-map" class="gps__map" href="#" target="_blank" rel="noopener">View on map</a>
+          </div>
+
+          <p id="gps-error" class="gps__error" role="alert" aria-live="polite" hidden></p>
+          <button id="btn-gps-retry" type="button" class="gps__retry" hidden>Retry</button>
+        </li>
+
+      </ol>
+
+      <div class="sticky">
+        <button id="btn-submit" type="button" class="btn btn--primary btn--submit" disabled>
+          <span class="btn__label">Submit check in</span>
+          <span class="btn__spin" aria-hidden="true"></span>
+        </button>
+        <p class="sticky__note">Three steps to enable. You can retake anytime.</p>
+      </div>
+    </section>
+
+    <!-- ========= SCREEN 3: RESULT ========= -->
+    <section id="screen-result" class="screen" aria-labelledby="result-heading" hidden>
+
+      <div id="result-success" class="result result--success" hidden>
+        <div class="result__icon result__icon--ok" aria-hidden="true">
+          <svg viewBox="0 0 48 48" width="56" height="56" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 24l10 10 18-20"/></svg>
+        </div>
+        <h2 id="result-heading" class="result__title">Checked in</h2>
+        <p class="result__time mono" id="result-time">15:32 IST</p>
+        <dl class="result__meta">
+          <div><dt>Driver</dt><dd id="result-name">Driver name</dd></div>
+          <div><dt>Vehicle</dt><dd id="result-vehicle" class="mono">TS09 AA 0000</dd></div>
+        </dl>
+        <a id="result-map" class="result__link" href="#" target="_blank" rel="noopener">View on map</a>
+        <button id="btn-another" type="button" class="btn btn--primary">Submit another</button>
+      </div>
+
+      <div id="result-error" class="result result--error" hidden>
+        <div class="result__icon result__icon--bad" aria-hidden="true">
+          <svg viewBox="0 0 48 48" width="56" height="56" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14l20 20"/><path d="M34 14L14 34"/></svg>
+        </div>
+        <h2 class="result__title">Something went wrong</h2>
+        <p id="result-error-msg" class="result__msg">We could not record your check in.</p>
+        <button id="btn-retry" type="button" class="btn btn--primary">Try again</button>
+        <button id="btn-back-login" type="button" class="btn btn--ghost">Back to login</button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <canvas id="resizer" hidden></canvas>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
